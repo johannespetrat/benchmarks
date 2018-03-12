@@ -1,11 +1,6 @@
-# Benchmarks
+# OptML Benchmarks
 
-This repo contains different CatBoost benchmarks.
+This repo contains quality benchmarks for a variety of classification and regression tasks. The team behind [Catboost](https://github.com/catboost/catboost) tested a tuned and an out-of-the-box version of their model against other gradient-boosting methods. In order to examine the effectiveness of [OptML](https://github.com/johannespetrat/OptML) I apply its optimisation methods to the same benchmark problems. At the moment all examples are taken from the catboost benchmark repo.
 
-## Quality comparison
-Go to subdirectory [quality benchmarks](https://github.com/catboost/benchmarks/blob/master/quality_benchmarks/) to see quality benchmarks
 
- ## GPU training comparision
-
-You can find scripts to run LigthGBM/XGBoost/CatBoost GPU versions and get time/quality statistics from logs in [gpu training](https://github.com/catboost/benchmarks/blob/master/gpu_training/) subdirectory
-
+This repo is forked from [https://github.com/catboost/benchmarks](https://github.com/catboost/benchmarks).
