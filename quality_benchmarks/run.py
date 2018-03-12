@@ -19,10 +19,10 @@ if __name__ == "__main__":
     namespace = parser.parse_args(sys.argv[1:])
 
     if namespace.bst == 'xgb':
-    	from xgboost_experiment import XGBExperiment
+        from xgboost_experiment import XGBExperiment
         Experiment = XGBExperiment
     elif namespace.bst == 'lgb':
-    	from lightgbm_experiment import LGBExperiment
+        from lightgbm_experiment import LGBExperiment
         Experiment = LGBExperiment
     elif namespace.bst == 'cab':
         from catboost_experiment import CABExperiment

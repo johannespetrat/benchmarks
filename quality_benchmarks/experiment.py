@@ -1,3 +1,4 @@
+import time
 import pandas as pd, numpy as np
 import pickle, time
 from sklearn.model_selection import StratifiedKFold, KFold, train_test_split
@@ -6,6 +7,7 @@ from datetime import datetime
 from cat_counter import CatCounter
 #from pandas.io.common import EmptyDataError
 import os
+from optml.bayesian_optimizer import BayesianOptimizer
 
 
 class Experiment(object):
@@ -174,11 +176,44 @@ class Experiment(object):
         self.hyperopt_eval_num, self.best_loss = 0, np.inf
 
         _ = fmin(fn=lambda params: self.run_cv(cv_pairs, params, verbose=verbose), 
-                 space=self.space, algo=tpe.suggest, max_evals=max_evals, trials=self.trials, rseed=1)
+                 space=self.space, algo=tpe.suggest, max_evals=max_evals, trials=self.trials, 
+                 rstate=np.random.RandomState(1))
 
         self.best_params = self.trials.best_trial['result']['params']
         self.best_n_estimators = self.trials.best_trial['result']['best_n_estimators']
+        import pdb; pdb.set_trace()
         return self.trials.best_trial['result']
+
+
+    def get_loss_function(self, eval_metric):
+        if eval_metric == 'logloss':
+            from sklearn.metrics import log_loss
+            return lambda x,y: -log_loss(x,y>0.5)
+        else:
+            raise Exception("unknown eval_metric")
+
+
+    def optimize_params_optml(self, X_train, y_train, X_test, y_test, n_folds, cat_cols, 
+        max_evals=None, verbose=True):
+        eval_func = self.get_loss_function(self.default_params['eval_metric'])
+        bayesOpt = BayesianOptimizer(model=self.model, 
+                                     hyperparams=self.hyperparams,
+                                     eval_func=eval_func)
+        start = time.time()
+        bayes_best_params, bayes_best_model = bayesOpt.fit(X_train=X_train, y_train=y_train, 
+            n_iters=self.hyperopt_evals, n_folds=n_folds)
+        end = time.time()
+
+        self.best_n_estimators = bayes_best_params.pop('n_estimators')
+        self.best_params = bayes_best_params
+        result = {'status': 'ok', 'loss': np.min([x[0] for x in bayesOpt.hyperparam_history]), 
+                  'best_n_estimators': self.best_n_estimators, 
+                  'best_loss': np.min([x[0] for x in bayesOpt.hyperparam_history]), 
+                  'hyperopt_eval_num': max_evals, 
+                  'params': self.best_params, 'eval_time': end-start}
+        self.trials = bayesOpt.hyperparam_history
+        eval_func(y_test, )
+        return result
 
 
     def dump(self, preds, elementwise_losses, test_losses, file_name):
@@ -228,7 +263,8 @@ class Experiment(object):
         cv_pairs, (dtrain, dtest) = self.split_and_preprocess(X_train, y_train, X_test, y_test, cat_cols)
 
         print 'Optimizing params...'
-        cv_result = self.optimize_params(cv_pairs)
+        #cv_result = self.optimize_params(cv_pairs)
+        cv_result = self.optimize_params_optml(X_train, y_train, X_test, y_test, 5, cat_cols)
         self.print_result(cv_result, '\nBest result on cv')
         
         print '\nTraining algorithm with the tuned parameters for different seed...'
