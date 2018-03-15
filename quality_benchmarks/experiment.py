@@ -198,7 +198,9 @@ class Experiment(object):
         eval_func = self.get_loss_function(self.default_params['eval_metric'])
         bayesOpt = BayesianOptimizer(model=self.model, 
                                      hyperparams=self.hyperparams,
-                                     eval_func=eval_func)
+                                     eval_func=eval_func,
+                                     normalize=True,
+                                     start_vals=self.default_params)
         start = time.time()
         bayes_best_params, bayes_best_model = bayesOpt.fit(X_train=X_train, y_train=y_train, 
             n_iters=self.hyperopt_evals, n_folds=n_folds)
@@ -206,13 +208,14 @@ class Experiment(object):
 
         self.best_n_estimators = bayes_best_params.pop('n_estimators')
         self.best_params = bayes_best_params
-        result = {'status': 'ok', 'loss': np.min([x[0] for x in bayesOpt.hyperparam_history]), 
+        result = {'status': 'ok', 'loss': np.max([x[0] for x in bayesOpt.hyperparam_history]), 
                   'best_n_estimators': self.best_n_estimators, 
-                  'best_loss': np.min([x[0] for x in bayesOpt.hyperparam_history]), 
+                  'best_loss': np.max([x[0] for x in bayesOpt.hyperparam_history]), 
                   'hyperopt_eval_num': max_evals, 
                   'params': self.best_params, 'eval_time': end-start}
         self.trials = bayesOpt.hyperparam_history
-        eval_func(y_test, )
+        import pdb; pdb.set_trace()
+        #eval_func(y_test, )
         return result
 
 
@@ -281,7 +284,7 @@ class Experiment(object):
         if not self.output_folder_path is None:
             date = datetime.now().strftime('%Y%m%d-%H%M%S')
             dataset_name = self.train_path.replace('/', ' ').strip().split()[-2]
-            file_name = '{}{}_results_{}_{}.pkl'.format(self.output_folder_path, self.bst_name, dataset_name, date)
+            file_name = '{}{}_results_tuned_{}_{}.pkl'.format(self.output_folder_path, self.bst_name, dataset_name, date)
             self.dump(preds, elementwise_losses, test_losses, file_name)
             print 'Results are saved to %s' % file_name
 
