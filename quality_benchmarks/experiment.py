@@ -214,8 +214,6 @@ class Experiment(object):
                   'hyperopt_eval_num': max_evals, 
                   'params': self.best_params, 'eval_time': end-start}
         self.trials = bayesOpt.hyperparam_history
-        import pdb; pdb.set_trace()
-        #eval_func(y_test, )
         return result
 
 
