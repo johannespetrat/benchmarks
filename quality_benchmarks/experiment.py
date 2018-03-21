@@ -8,6 +8,7 @@ from cat_counter import CatCounter
 #from pandas.io.common import EmptyDataError
 import os
 from optml.bayesian_optimizer import BayesianOptimizer
+from optml.random_search import RandomSearchOptimizer
 
 
 class Experiment(object):
@@ -181,7 +182,6 @@ class Experiment(object):
 
         self.best_params = self.trials.best_trial['result']['params']
         self.best_n_estimators = self.trials.best_trial['result']['best_n_estimators']
-        import pdb; pdb.set_trace()
         return self.trials.best_trial['result']
 
 
@@ -199,14 +199,20 @@ class Experiment(object):
         bayesOpt = BayesianOptimizer(model=self.model, 
                                      hyperparams=self.hyperparams,
                                      eval_func=eval_func,
-                                     normalize=True,
+                                     normalize=False,
                                      start_vals=self.default_params)
+        randomOpt = RandomSearchOptimizer(model=self.model, 
+                                          hyperparams=self.hyperparams,
+                                          eval_func=eval_func)
         start = time.time()
+        #bayes_best_params, bayes_best_model = randomOpt.fit(X_train=X_train, y_train=y_train, 
+        #            n_iters=self.hyperopt_evals, n_folds=n_folds)
         bayes_best_params, bayes_best_model = bayesOpt.fit(X_train=X_train, y_train=y_train, 
             n_iters=self.hyperopt_evals, n_folds=n_folds)
         end = time.time()
 
-        self.best_n_estimators = bayes_best_params.pop('n_estimators')
+        #self.best_n_estimators = bayes_best_params.pop('n_estimators')
+        self.best_n_estimators = 10
         self.best_params = bayes_best_params
         result = {'status': 'ok', 'loss': np.max([x[0] for x in bayesOpt.hyperparam_history]), 
                   'best_n_estimators': self.best_n_estimators, 

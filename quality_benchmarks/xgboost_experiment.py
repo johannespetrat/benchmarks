@@ -24,22 +24,28 @@ class XGBExperiment(Experiment):
             'gamma': hp.choice('gamma', [0, hp.loguniform('gamma_positive', -16, 2)])
         }
 
+        #self.hyperparams = [
+        #    Parameter(name='eta', param_type='continuous', lower=0.001, upper=1),
+        #    Parameter(name='max_depth', param_type='integer', lower=2, upper=20),
+        #    Parameter(name='subsample', param_type='continuous', lower=0.5, upper=1),
+        #    Parameter(name='colsample_bytree', param_type='continuous', lower=0.5, upper=1),
+        #    Parameter(name='colsample_bylevel', param_type='continuous', lower=0.5, upper=1),
+        #    Parameter(name='min_child_weight', param_type='continuous', lower=0.001, upper=1),
+        #    Parameter(name='alpha', param_type='continuous', lower=0.001, upper=1),
+        #    Parameter(name='lambda', param_type='continuous', lower=0.001, upper=1),
+        #    Parameter(name='gamma', param_type='continuous', lower=0.001, upper=1),
+        #    Parameter(name='n_estimators', param_type='integer', lower=10, upper=10)
+        #]
+
         self.hyperparams = [
-            Parameter(name='eta', param_type='continuous', lower=0.001, upper=1),
             Parameter(name='max_depth', param_type='integer', lower=2, upper=20),
-            Parameter(name='subsample', param_type='continuous', lower=0.5, upper=1),
-            Parameter(name='colsample_bytree', param_type='continuous', lower=0.5, upper=1),
-            Parameter(name='colsample_bylevel', param_type='continuous', lower=0.5, upper=1),
-            Parameter(name='min_child_weight', param_type='continuous', lower=0.001, upper=1),
-            Parameter(name='alpha', param_type='continuous', lower=0.001, upper=1),
-            Parameter(name='lambda', param_type='continuous', lower=0.001, upper=1),
-            Parameter(name='gamma', param_type='continuous', lower=0.001, upper=1),
-            Parameter(name='n_estimators', param_type='integer', lower=10, upper=10)
+            Parameter(name='gamma', param_type='continuous', lower=0., upper=1.)
         ]
 
         self.default_params = {'eta': 0.3, 'max_depth': 6, 'subsample': 1.0, 
                                'colsample_bytree': 1.0, 'colsample_bylevel': 1.0,
-                               'min_child_weight': 1, 'alpha': 0, 'lambda': 1, 'gamma': 0}
+                               'min_child_weight': 1, 'alpha': 0, 'lambda': 1, 
+                               'gamma': 0, 'n_estimators': n_estimators}
         self.default_params = self.preprocess_params(self.default_params)
         self.title = 'XGBoost'
         self.model = xgb
@@ -59,7 +65,7 @@ class XGBExperiment(Experiment):
 
 
     def fit(self, params, dtrain, dtest, n_estimators, seed=0):
-        params.update({"seed": seed})
+        params.update({"seed": seed, "n_estimators":n_estimators})
         evals_result = {}
         bst = xgb.train(params, dtrain, evals=[(dtest, 'test')], evals_result=evals_result,
                         num_boost_round=n_estimators, verbose_eval=False)

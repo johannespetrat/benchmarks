@@ -31,6 +31,7 @@ def create_result_table_old(scores):
 
 def create_result_table(scores):
     t = Texttable()
+    t.set_precision(6)
     t.add_row(['']+scores_names)
     for task, score in scores.items():
         if len(score)<len(scores_names):
